@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # API
+  app-api:
+    image: local/laravel:8.2
+    container_name: app-api
+    networks:
+      - app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./api:/var/www/html
+
+  # API Horizon/Scheduler
+  app-api-horizon:
+    image: local/horizon:8.2
+    container_name: app-api-horizon
+    networks:
+      - app
+    volumes:
+      - ./api:/var/www/html
+
+  # API web
+  app-api-web:
+    image: nginx:latest
+    container_name: app-api-web
+    links:
+      - app-api
+    ports:
+      - "8030:80"
+    networks:
+      - app
+    volumes:
+      - ./api:/var/www/html
+
+  # MySQL
+  app-mysql:
+    image: mariadb:latest
+    container_name: app-mysql
+    command: "--explicit_defaults_for_timestamp=1"
+    environment:
+      MYSQL_ROOT_PASSWORD: 20230101
+    networks:
+      - app
+    ports:
+      - "3330:3306"
+    volumes:
+      - ./.docker_data/mysql:/var/lib/mysql
+
+  # Redis
+  app-redis:
+    image: redis:alpine
+    container_name: app-redis
+    command: "redis-server --requirepass 20230101"
+    networks:
+      - app
+    ports:
+      - "5030:6379"
+
+networks:
+  app:
+    driver: bridge
