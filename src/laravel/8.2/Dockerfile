@@ -5,8 +5,9 @@ USER root
 
 RUN apt-get update; \
     apt-get upgrade -yqq; \
-    pecl -q channel-update pecl.php.net; \
-    apt-get install -yqq --no-install-recommends \
+    pecl -q channel-update pecl.php.net
+
+RUN apt-get install -yqq --no-install-recommends \
         apt-utils \
         cron \
         zsh \
