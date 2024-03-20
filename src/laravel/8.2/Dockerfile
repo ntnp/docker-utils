@@ -37,7 +37,7 @@ RUN chmod +x /usr/local/bin/composer
 
 ######################################## php exts
 
-RUN docker-php-ext-install bcmath exif mbstring pcntl pdo_mysql zip
+RUN docker-php-ext-install bcmath gettext exif mbstring pcntl pdo_mysql zip
 RUN docker-php-ext-enable opcache
 
 RUN apt-get install -yqq --no-install-recommends icu-devtools libicu-dev zlib1g-dev g++
