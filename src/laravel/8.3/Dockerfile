@@ -66,7 +66,7 @@ ENV UID=${UID}
 ENV GID=${GID}
 
 RUN addgroup --gid ${GID} --system php
-RUN adduser --uid ${UID} --system --ingroup php --disabled-password --shell /bin/zsh --home /home/php php
+RUN adduser --uid ${UID} --system --ingroup php --disabled-password --shell /usr/bin/zsh --home /home/php php
 
 RUN mkdir -p /home/php/.composer && chown -R php /home/php
 
@@ -112,7 +112,7 @@ USER root
 
 ######################################## supervisor
 
-COPY --chown=root:root ../supervisord.conf /etc/supervisor/supervisord.conf
+COPY --chown=root:root ../supervisord-horizon.conf /etc/supervisor/supervisord.conf
 
 RUN mkdir -p /var/log/supervisor; \
     touch \
@@ -131,6 +131,33 @@ RUN wget -q "https://github.com/aptible/supercronic/releases/download/v0.2.26/su
   && echo "*/1 * * * * php /var/www/html/artisan schedule:run --verbose --no-interaction" > /etc/supercronic/laravel;
 
 ########################################
+
+USER root
+CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+
+################################################################################
+
+FROM laravel AS reverb
+
+WORKDIR /var/www/html
+USER root
+
+######################################## supervisor
+
+COPY --chown=root:root ../supervisord-reverb.conf /etc/supervisor/supervisord.conf
+
+RUN mkdir -p /var/log/supervisor; \
+    touch \
+    /var/log/supervisor/supervisord.log \
+    /var/log/supervisor/reverb.log \
+    /var/log/supervisor/reverb.err.log
+
+RUN chown -R php /var/log/supervisor
+RUN chown -R php /var/www/html
+
+########################################
+
+EXPOSE 8080
 
 USER root
 CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
