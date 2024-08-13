@@ -46,17 +46,6 @@ RUN docker-php-ext-install intl
 RUN pecl -q install -o -f redis && rm -rf /tmp/pear
 RUN docker-php-ext-enable redis
 
-######################################## puppeteer
-
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_CHROME_PATH=/usr/bin/google-chrome
-
-RUN curl -SL https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
-    && apt-get update \
-    && apt-get install google-chrome-stable -yqq --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
-
 ######################################## php user
 
 ARG UID=1000
@@ -95,6 +84,46 @@ RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg -
 
 RUN npm up -g
 RUN npm i -g bun
+
+######################################## chrome for puppeteer
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_CHROME_PATH=/usr/bin/google-chrome
+
+RUN apt-get -yqq install \
+      wget \
+      fonts-liberation \
+      libasound2 \
+      libatk-bridge2.0-0 \
+      libatk1.0-0 \
+      libatspi2.0-0 \
+      libcairo2 \
+      libcups2 \
+      libdbus-1-3 \
+      libdrm2 \
+      libgbm1 \
+      libglib2.0-0 \
+      libgtk-3-0 \
+      libgtk-4-1 \
+      libnspr4 \
+      libnss3 \
+      libpango-1.0-0 \
+      libu2f-udev \
+      libvulkan1 \
+      libx11-6 \
+      libxcb1 \
+      libxcomposite1 \
+      libxdamage1 \
+      libxext6 \
+      libxfixes3 \
+      libxkbcommon0 \
+      libxrandr2 \
+      xdg-utils; \
+    apt-get clean; \
+    apt-get autoclean
+
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+RUN dpkg -i google-chrome-stable_current_amd64.deb
 
 ########################################
 
