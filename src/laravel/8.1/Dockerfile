@@ -1,6 +1,8 @@
 FROM php:8.1-fpm AS laravel
+USER root
+WORKDIR /tmp
 
-WORKDIR /var/www/html
+########################################
 USER root
 
 RUN apt-get update; \
@@ -29,13 +31,15 @@ RUN apt-get install -yqq --no-install-recommends \
     apt-get autoclean
 
 ######################################## php, composer
+USER root
 
-COPY ../php.ini /usr/local/etc/php/php.ini
+COPY --chown=root:root ../php.ini /usr/local/etc/php/php.ini
 
 RUN curl -o /usr/local/bin/composer https://getcomposer.org/download/latest-stable/composer.phar
 RUN chmod +x /usr/local/bin/composer
 
 ######################################## php exts
+USER root
 
 RUN docker-php-ext-install bcmath gettext exif mbstring pcntl pdo_mysql zip
 RUN docker-php-ext-enable opcache
@@ -46,18 +50,8 @@ RUN docker-php-ext-install intl
 RUN pecl -q install -o -f redis && rm -rf /tmp/pear
 RUN docker-php-ext-enable redis
 
-######################################## puppeteer
-
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_CHROME_PATH=/usr/bin/google-chrome
-
-RUN curl -SL https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
-    && apt-get update \
-    && apt-get install google-chrome-stable -yqq --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
-
 ######################################## php user
+USER root
 
 ARG UID=1000
 ARG GID=1000
@@ -74,56 +68,91 @@ RUN sed -i "s/user = www-data/user = php/g" /usr/local/etc/php-fpm.d/www.conf
 RUN sed -i "s/group = www-data/group = php/g" /usr/local/etc/php-fpm.d/www.conf
 
 ######################################## zsh
-
 USER php
 
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-RUN git clone https://github.com/zsh-users/zsh-autosuggestions "/home/php/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
-RUN git clone https://github.com/sindresorhus/pure.git "/home/php/.zsh/pure"
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"; \
+    git clone https://github.com/zsh-users/zsh-autosuggestions /home/php/.oh-my-zsh/custom/plugins/zsh-autosuggestions; \
+    git clone https://github.com/sindresorhus/pure.git /home/php/.zsh/pure
 
-COPY ../.zshrc "/home/php/.zshrc"
-USER root
+COPY --chown=php:php ../.zshrc /home/php/.zshrc
 
 ######################################## node, bun
+USER root
 
-RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg; \
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list; \
-    apt-get update; \
-    apt-get -y install --no-install-recommends nodejs; \
+RUN curl -sL https://deb.nodesource.com/setup_22.x | bash; \
+    apt-get install -y nodejs
+
+RUN node -v; \
+    npm -v; \
+    npm i -g npm bun
+
+######################################## chrome, puppeteer
+USER root
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_CHROME_PATH=/usr/bin/google-chrome
+
+RUN apt-get -yqq install \
+      wget \
+      fonts-liberation \
+      libasound2 \
+      libatk-bridge2.0-0 \
+      libatk1.0-0 \
+      libatspi2.0-0 \
+      libcairo2 \
+      libcups2 \
+      libdbus-1-3 \
+      libdrm2 \
+      libgbm1 \
+      libglib2.0-0 \
+      libgtk-3-0 \
+      libgtk-4-1 \
+      libnspr4 \
+      libnss3 \
+      libpango-1.0-0 \
+      libu2f-udev \
+      libvulkan1 \
+      libx11-6 \
+      libxcb1 \
+      libxcomposite1 \
+      libxdamage1 \
+      libxext6 \
+      libxfixes3 \
+      libxkbcommon0 \
+      libxrandr2 \
+      xdg-utils; \
     apt-get clean; \
     apt-get autoclean
 
-RUN npm up -g
-RUN npm i -g bun
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+RUN dpkg -i google-chrome-stable_current_amd64.deb
 
 ########################################
+USER php
+WORKDIR /var/www/html
 
 EXPOSE 9000
-
-USER php
 CMD ["php-fpm"]
 
 ################################################################################
-
 FROM laravel AS horizon
-
-WORKDIR /var/www/html
 USER root
+WORKDIR /tmp
 
 ######################################## supervisor
+USER root
 
 COPY --chown=root:root ../supervisord-horizon.conf /etc/supervisor/supervisord.conf
 
 RUN mkdir -p /var/log/supervisor; \
     touch \
-    /var/log/supervisor/supervisord.log \
-    /var/log/supervisor/horizon.log \
-    /var/log/supervisor/horizon.err.log \
-    /var/log/supervisor/scheduler.log \
-    /var/log/supervisor/scheduler.err.log
+        /var/log/supervisor/supervisord.log \
+        /var/log/supervisor/horizon.log \
+        /var/log/supervisor/horizon.err.log \
+        /var/log/supervisor/scheduler.log \
+        /var/log/supervisor/scheduler.err.log
 
-RUN chown -R php /var/log/supervisor
-RUN chown -R php /var/www/html
+RUN chown -R php:php /var/log/supervisor
 
 RUN wget -q "https://github.com/aptible/supercronic/releases/download/v0.2.26/supercronic-linux-amd64" -O /usr/bin/supercronic \
   && chmod +x /usr/bin/supercronic \
@@ -131,33 +160,30 @@ RUN wget -q "https://github.com/aptible/supercronic/releases/download/v0.2.26/su
   && echo "*/1 * * * * php /var/www/html/artisan schedule:run --verbose --no-interaction" > /etc/supercronic/laravel;
 
 ########################################
+USER php
 
-USER root
 CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
 
 ################################################################################
-
 FROM laravel AS reverb
-
-WORKDIR /var/www/html
 USER root
+WORKDIR /tmp
 
 ######################################## supervisor
+USER root
 
 COPY --chown=root:root ../supervisord-reverb.conf /etc/supervisor/supervisord.conf
 
 RUN mkdir -p /var/log/supervisor; \
     touch \
-    /var/log/supervisor/supervisord.log \
-    /var/log/supervisor/reverb.log \
-    /var/log/supervisor/reverb.err.log
+        /var/log/supervisor/supervisord.log \
+        /var/log/supervisor/reverb.log \
+        /var/log/supervisor/reverb.err.log
 
 RUN chown -R php /var/log/supervisor
-RUN chown -R php /var/www/html
 
 ########################################
+USER php
 
 EXPOSE 8080
-
-USER root
 CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]

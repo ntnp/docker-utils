@@ -5,6 +5,13 @@ all :
 
 ########################################
 
+laravel :
+	make build/laravel
+	make tag/laravel
+	make push/laravel
+
+########################################
+
 build/laravel :
 	make build/laravel/8.1
 	make build/laravel/8.2
