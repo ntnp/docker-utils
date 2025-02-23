@@ -5,6 +5,13 @@ all :
 
 ########################################
 
+expo-builder :
+	make build/expo-builder
+	make tag/expo-builder
+	make push/expo-builder
+
+########################################
+
 laravel :
 	make build/laravel
 	make tag/laravel
@@ -48,6 +55,20 @@ laravel/8.4 :
 	make build/laravel/8.4
 	make tag/laravel/8.4
 	make push/laravel/8.4
+
+########################################
+# Expo android builder
+
+build/expo-builder :
+	docker build -t local/expo-builder:52 -f src/expo-builder/52/Dockerfile src/expo-builder/52
+
+tag/expo-builder :
+	docker tag local/expo-builder:52 ntnp/expo-builder:52
+	docker tag local/expo-builder:52 ntnp/expo-builder
+
+push/expo-builder :
+	docker push ntnp/expo-builder:52
+	docker push ntnp/expo-builder
 
 ########################################
 # PHP 8.1 for Laravel
