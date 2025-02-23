@@ -19,45 +19,45 @@ RUN apt-get update -y && apt-get install -yq curl git unzip wget
 
 ## Node + Bun
 
-ONBUILD ENV NODE_VERSION $NODE_VERSION
+ONBUILD ENV NODE_VERSION=$NODE_VERSION
 
-ENV NVM_DIR /usr/local/nvm
-ONBUILD RUN mkdir -p $NVM_DIR
+ENV NVM_DIR=/usr/local/nvm
+RUN mkdir -p $NVM_DIR
 
 ONBUILD RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash \
     && . $NVM_DIR/nvm.sh \
     && nvm install $NODE_VERSION && nvm use $NODE_VERSION
 
-ONBUILD ENV NODE_PATH $NVM_DIR/versions/node/$NODE_VERSION
-ONBUILD ENV PATH $NODE_PATH/bin:$PATH
+ONBUILD ENV NODE_PATH=$NVM_DIR/versions/node/$NODE_VERSION
+ONBUILD ENV PATH=$NODE_PATH/bin:$PATH
 
 ONBUILD RUN npm i -g npm bun
 
-ENV BUN_INSTALL /root/.bun
-ENV PATH $BUN_INSTALL/bin:$PATH
+ENV BUN_INSTALL=/root/.bun
+ENV PATH=$BUN_INSTALL/bin:$PATH
 
 ONBUILD RUN bun i -g eas-cli
 
 ## Java SDK
 
-ONBUILD ENV JAVA_VERSION $JAVA_VERSION
+ONBUILD ENV JAVA_VERSION=$JAVA_VERSION
 
-ONBUILD ENV JAVA_HOME /usr/lib/jvm/jdk-${JAVA_VERSION}-oracle-x64
-ONBUILD RUN mkdir -p $JAVA_HOME
+ONBUILD ENV JAVA_HOME=/usr/lib/jvm/jdk-${JAVA_VERSION}-oracle-x64
+ONBUILD ENV PATH=$JAVA_HOME/bin:$PATH
 
 RUN apt-get install -yq libc6-x32 libc6-i386 wget
 ONBUILD RUN wget "https://download.oracle.com/java/${JAVA_VERSION}/latest/jdk-${JAVA_VERSION}_linux-x64_bin.deb" && dpkg -i "jdk-${JAVA_VERSION}_linux-x64_bin.deb"
 
-ONBUILD ENV PATH $JAVA_HOME/bin:$PATH
+ONBUILD RUN ln -s $(dirname $(dirname $(readlink -f $(which java)))) $JAVA_HOME
 
 ## Android SDK
 
-ONBUILD ENV CMAKE_VERSION $CMAKE_VERSION
-ONBUILD ENV ANDROID_BUILD_TOOLS_VERSION $ANDROID_BUILD_TOOLS_VERSION
-ONBUILD ENV ANDROID_NDK_VERSION $ANDROID_NDK_VERSION
+ONBUILD ENV CMAKE_VERSION=$CMAKE_VERSION
+ONBUILD ENV ANDROID_BUILD_TOOLS_VERSION=$ANDROID_BUILD_TOOLS_VERSION
+ONBUILD ENV ANDROID_NDK_VERSION=$ANDROID_NDK_VERSION
 
-ENV ANDROID_HOME /usr/lib/android-sdk
-ENV ANDROID_NDK_HOME /usr/lib/android-sdk
+ENV ANDROID_HOME=/usr/lib/android-sdk
+ENV ANDROID_NDK_HOME=/usr/lib/android-sdk
 RUN mkdir -p $ANDROID_HOME
 
 RUN apt-get install -yq sdkmanager
