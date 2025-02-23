@@ -44,6 +44,11 @@ laravel/8.3 :
 	make tag/laravel/8.3
 	make push/laravel/8.3
 
+laravel/8.4 :
+	make build/laravel/8.4
+	make tag/laravel/8.4
+	make push/laravel/8.4
+
 ########################################
 # PHP 8.1 for Laravel
 
@@ -97,5 +102,23 @@ push/laravel/8.3 :
 	docker push ntnp/laravel-dev:8.3
 	docker push ntnp/laravel-horizon-dev:8.3
 	docker push ntnp/laravel-reverb-dev:8.3
+
+########################################
+# PHP 8.4 for Laravel
+
+build/laravel/8.4 :
+	docker build -t local/laravel:8.4 -f src/laravel/8.4/Dockerfile --target=laravel src/laravel
+	docker build -t local/horizon:8.4 -f src/laravel/8.4/Dockerfile --target=horizon src/laravel
+	docker build -t local/reverb:8.4 -f src/laravel/8.4/Dockerfile --target=reverb src/laravel
+
+tag/laravel/8.4 :
+	docker tag local/laravel:8.4 ntnp/laravel-dev:8.4
+	docker tag local/horizon:8.4 ntnp/laravel-horizon-dev:8.4
+	docker tag local/reverb:8.4 ntnp/laravel-reverb-dev:8.4
+
+push/laravel/8.4 :
+	docker push ntnp/laravel-dev:8.4
+	docker push ntnp/laravel-horizon-dev:8.4
+	docker push ntnp/laravel-reverb-dev:8.4
 
 ########################################
