@@ -35,8 +35,7 @@ USER root
 
 COPY --chown=root:root ../php.ini /usr/local/etc/php/php.ini
 
-RUN curl -o /usr/local/bin/composer https://getcomposer.org/download/latest-stable/composer.phar
-RUN chmod +x /usr/local/bin/composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 ######################################## php exts
 USER root
