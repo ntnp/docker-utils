@@ -23,16 +23,19 @@ build/laravel :
 	make build/laravel/8.1
 	make build/laravel/8.2
 	make build/laravel/8.3
+	make build/laravel/8.4
 
 tag/laravel :
 	make tag/laravel/8.1
 	make tag/laravel/8.2
 	make tag/laravel/8.3
+	make tag/laravel/8.4
 
 push/laravel :
 	make push/laravel/8.1
 	make push/laravel/8.2
 	make push/laravel/8.3
+	make push/laravel/8.4
 
 ########################################
 
