@@ -156,7 +156,7 @@ RUN chown -R php:php /var/log/supervisor
 RUN wget -q "https://github.com/aptible/supercronic/releases/download/v0.2.26/supercronic-linux-amd64" -O /usr/bin/supercronic \
   && chmod +x /usr/bin/supercronic \
   && mkdir -p /etc/supercronic \
-  && echo "*/1 * * * * php /var/www/html/artisan schedule:run --verbose --no-interaction" > /etc/supercronic/laravel;
+  && echo "* * * * * php /var/www/html/artisan schedule:run --verbose --no-interaction" > /etc/supercronic/laravel;
 
 ########################################
 USER php
